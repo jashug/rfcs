@@ -120,14 +120,32 @@ fn main() {
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-TODO: This section is not yet written
+Add a trait `FnStatic`:
 
-## Corner cases
+```rust
+trait FnStatic<Args>: Fn<Args> {
+    extern "rust-call" fn call_static(args: Args) -> Self::Output;
+}
+```
+
+Automatically implement this for function types without upvars.
+Guard the `call_static` method behind the `fn_traits` feature, like the other `Fn` traits.
+
+Support `FnStatic(A, B, C) -> X` syntax for this trait.
+
+Generalize the conversion from function types without upvars to function pointers to a conversion from all types which implement `FnStatic` by returning a pointer to `F::call_static`.
 
 # Drawbacks
 [drawbacks]: #drawbacks
 
+An additional `lang-item`.
+
+Other than that, I am not aware of any drawbacks to this proposal.
+
 # Rationale and alternatives
+[alternatives]: #rationale-and-alternatives
+
+This appears to be a logical extension to the `Fn` trait hierarchy: `self` borrowed, mutably borrowed, consumed, or unnecessary. In particular, the `self` parameter of every function assocated to a type follows one of those four patterns.
 
 Several mechanisms have been proposed to allow trampolines to be written in safe
 code. These have been discussed at length in the following places.
@@ -146,6 +164,8 @@ See also [Extending the capabilities of compiler-generated function types](https
 
 ## What are the consequences of not doing this?
 
+Trampolines that do not include a place to store arbitrary data often cannot be written in safe code.
+
 # Prior art
 [prior-art]: #prior-art
 
@@ -154,3 +174,5 @@ See also [Extending the capabilities of compiler-generated function types](https
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
+
+This proposal does not foreclose any of the alternative proposals mentioned in the [Rationale and alternatives](#rationale-and-alternatives) section.
